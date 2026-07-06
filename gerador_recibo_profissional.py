@@ -1,48 +1,73 @@
+# Para atender à solicitação:
+# 1. Layout mais elaborado e profissional.
+# 2. Logotipo local (usando base64 para incluir a imagem diretamente no HTML).
+# 3. Logotipo posicionado no canto superior esquerdo com tamanho controlado.
+# 4. Gerar o código Python (Streamlit) que faz isso.
+
+# Vamos assumir que a imagem será carregada no Streamlit e processada.
+
+streamlit_code_v3 = """
 import streamlit as st
-from datetime import date
 import base64
+from datetime import date
+from io import BytesIO
 
-# Configuração da página
-st.set_page_config(page_title="Gerador de Recibos Profissional", layout="centered")
+st.set_page_config(page_title="Gerador de Recibos Premium", layout="centered")
 
-# CSS para o estilo profissional (Verde Oliva, Dourado, Branco)
-st.markdown("""
+# Função para converter imagem para base64
+def get_image_base64(uploaded_file):
+    image_data = uploaded_file.getvalue()
+    return base64.b64encode(image_data).decode()
+
+# Estilo CSS Profissional
+st.markdown(\"\"\"
     <style>
-        .recibo-box {
-            font-family: 'Arial', sans-serif;
+        .recibo-wrapper {
+            background-color: #f9f9f9;
+            padding: 50px;
+            border: 1px solid #ddd;
+        }
+        .recibo-card {
             background-color: #ffffff;
-            border: 3px solid #556B2F; /* Verde Oliva */
             padding: 40px;
-            max-width: 600px;
-            margin: auto;
-            color: #333;
+            border-left: 10px solid #556B2F; /* Verde Oliva */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        .header-recibo {
-            text-align: center;
+        .header-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #DAA520; /* Dourado */
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo-container {
+            width: 120px;
+        }
+        .title-text {
             color: #556B2F;
-            border-bottom: 3px solid #DAA520; /* Dourado */
-            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
-        .info-row {
-            margin-bottom: 10px;
-            font-size: 16px;
+        .content-body {
+            line-height: 1.6;
+            color: #444;
+            font-size: 18px;
         }
-        .footer-recibo {
+        .footer-sign {
             margin-top: 60px;
             text-align: center;
-            border-top: 1px solid #DAA520;
-            padding-top: 20px;
-            color: #556B2F;
+            border-top: 1px solid #556B2F;
+            padding-top: 10px;
         }
     </style>
-""", unsafe_allow_html=True)
+\"\"\", unsafe_allow_html=True)
 
-st.title("📄 Gerador de Recibos")
+st.title("💼 Gerador de Recibos Premium")
 
-# Formulario
 with st.form("recibo_form"):
-    st.subheader("Configurações do Recibo")
-    logo_url = st.text_input("Link do logotipo (Opcional):")
+    uploaded_logo = st.file_uploader("Carregue o logotipo da empresa", type=['png', 'jpg', 'jpeg'])
     
     col1, col2 = st.columns(2)
     with col1:
@@ -54,48 +79,41 @@ with st.form("recibo_form"):
     referente_a = st.text_area("Referente a:")
     forma_pagamento = st.selectbox("Forma de Pagamento:", ["Dinheiro", "PIX", "Cheque"])
     
-    st.divider()
-    st.subheader("Dados do Recebedor")
-    nome_empresa = st.text_input("Nome da Empresa / Recebedor:")
-    telefone = st.text_input("Telefone (Opcional):")
-    cpf_cnpj = st.text_input("CPF/CNPJ (Opcional):")
+    nome_empresa = st.text_input("Nome da sua Empresa:")
+    telefone_empresa = st.text_input("Telefone:")
+    doc_empresa = st.text_input("CPF/CNPJ:")
     
     btn_gerar = st.form_submit_button("Gerar Recibo Profissional")
 
-# Geração do HTML
 if btn_gerar:
-    html_content = f"""
-    <div class="recibo-box">
-        <div class="header-recibo">
-            <h1>RECIBO</h1>
-        </div>
-        <p>Recebi(emos) de <b>{recebido_de}</b> a importância de <b>R$ {valor:,.2f}</b>.</p>
-        <div class="info-row"><b>Referente a:</b> {referente_a}</div>
-        <div class="info-row"><b>Forma de Pagamento:</b> {forma_pagamento}</div>
-        <div class="info-row"><b>Data:</b> {data.strftime('%d/%m/%Y')}</div>
-        
-        <br>
-        <div style="text-align: right;">
-            <p>__________________________________________<br>
-            <b>{nome_empresa}</b><br>
-            {telefone}<br>
-            {cpf_cnpj}</p>
-        </div>
-        <div class="footer-recibo">
-            Documento emitido com finalidade comprobatória.
+    logo_html = ""
+    if uploaded_logo:
+        b64 = get_image_base64(uploaded_logo)
+        logo_html = f'<div class="logo-container"><img src="data:image/png;base64,{b64}" style="width:100%"></div>'
+
+    html_content = f\"\"\"
+    <div class="recibo-wrapper">
+        <div class="recibo-card">
+            <div class="header-section">
+                {logo_html}
+                <div class="title-text">Recibo</div>
+            </div>
+            <div class="content-body">
+                <p>Recebi(emos) de <b>{recebido_de}</b> a importância de <b>R$ {valor:,.2f}</b>.</p>
+                <p><b>Referente a:</b> {referente_a}</p>
+                <p><b>Forma de Pagamento:</b> {forma_pagamento}</p>
+                <p><b>Data:</b> {data.strftime('%d/%m/%Y')}</p>
+            </div>
+            <div class="footer-sign">
+                <p><b>{nome_empresa}</b><br>
+                {telefone_empresa} | {doc_empresa}</p>
+            </div>
         </div>
     </div>
-    """
-    
-    # Exibe o HTML renderizado
+    \"\"\"
     st.markdown(html_content, unsafe_allow_html=True)
-    
-    # Botão para download do HTML
-    st.download_button(
-        label="Download como HTML",
-        data=html_content,
-        file_name="recibo.html",
-        mime="text/html"
-    )
-    
-    st.info("Dica: Use o botão de download ou imprima a tela (Ctrl+P).")
+    st.download_button("Download HTML", data=html_content, file_name="recibo_profissional.html", mime="text/html")
+"""
+
+with open("gerador_recibo_premium.py", "w", encoding="utf-8") as f:
+    f.write(streamlit_code_v3)
