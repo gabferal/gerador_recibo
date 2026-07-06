@@ -1,36 +1,38 @@
-
 import streamlit as st
 from datetime import date
+import base64
 
-# Configuração da página e estilo
+# Configuração da página
 st.set_page_config(page_title="Gerador de Recibos Profissional", layout="centered")
 
 # CSS para o estilo profissional (Verde Oliva, Dourado, Branco)
 st.markdown("""
     <style>
-        .recibo-container {
+        .recibo-box {
+            font-family: 'Arial', sans-serif;
             background-color: #ffffff;
-            border: 2px solid #556B2F; /* Verde Oliva */
-            padding: 30px;
-            border-radius: 10px;
+            border: 3px solid #556B2F; /* Verde Oliva */
+            padding: 40px;
+            max-width: 600px;
+            margin: auto;
             color: #333;
         }
-        .header {
-            color: #556B2F;
-            border-bottom: 2px solid #DAA520; /* Dourado */
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        .header-recibo {
             text-align: center;
+            color: #556B2F;
+            border-bottom: 3px solid #DAA520; /* Dourado */
+            margin-bottom: 20px;
         }
-        .footer {
-            margin-top: 50px;
+        .info-row {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .footer-recibo {
+            margin-top: 60px;
             text-align: center;
             border-top: 1px solid #DAA520;
-            padding-top: 10px;
-        }
-        .highlight {
+            padding-top: 20px;
             color: #556B2F;
-            font-weight: bold;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -39,8 +41,8 @@ st.title("📄 Gerador de Recibos")
 
 # Formulario
 with st.form("recibo_form"):
-    st.subheader("Informações do Recibo")
-    logo_url = st.text_input("Link da imagem do logotipo (URL):")
+    st.subheader("Configurações do Recibo")
+    logo_url = st.text_input("Link do logotipo (Opcional):")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -48,49 +50,52 @@ with st.form("recibo_form"):
     with col2:
         data = st.date_input("Data", date.today())
     
-    st.divider()
-    st.subheader("Dados do Pagador")
     recebido_de = st.text_input("Recebido de:")
-    
-    st.subheader("Dados do Recebedor (Empresa)")
-    nome_empresa = st.text_input("Nome da sua Empresa:")
-    telefone_empresa = st.text_input("Telefone (Opcional):")
-    doc_empresa = st.text_input("CPF/CNPJ (Opcional):")
-    
     referente_a = st.text_area("Referente a:")
-    forma_pagamento = st.radio("Forma de Pagamento:", ["Dinheiro", "PIX", "Cheque"])
+    forma_pagamento = st.selectbox("Forma de Pagamento:", ["Dinheiro", "PIX", "Cheque"])
     
-    btn_gerar = st.form_submit_button("Gerar Recibo")
+    st.divider()
+    st.subheader("Dados do Recebedor")
+    nome_empresa = st.text_input("Nome da Empresa / Recebedor:")
+    telefone = st.text_input("Telefone (Opcional):")
+    cpf_cnpj = st.text_input("CPF/CNPJ (Opcional):")
+    
+    btn_gerar = st.form_submit_button("Gerar Recibo Profissional")
 
-# Exibição do Recibo
+# Geração do HTML
 if btn_gerar:
-    st.markdown("""
-    <div class="recibo-container">
-        <div class="header">
+    html_content = f"""
+    <div class="recibo-box">
+        <div class="header-recibo">
             <h1>RECIBO</h1>
         </div>
-    """, unsafe_allow_html=True)
-    
-    if logo_url:
-        st.image(logo_url, width=150)
-    
-    st.write(f"**Valor:** R$ {valor:,.2f}")
-    st.write(f"**Data:** {data.strftime('%d/%m/%Y')}")
-    st.write(f"**Recebido de:** {recebido_de}")
-    st.write(f"**Referente a:** {referente_a}")
-    st.write(f"**Forma de Pagamento:** {forma_pagamento}")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.write(f"---")
-    st.write(f"**Recebido por:** {nome_empresa}")
-    if telefone_empresa: st.write(f"**Contato:** {telefone_empresa}")
-    if doc_empresa: st.write(f"**Documento:** {doc_empresa}")
-    
-    st.markdown("""
-        <div class="footer">
-            <br><br>__________________________________________<br>Assinatura do Recebedor
+        <p>Recebi(emos) de <b>{recebido_de}</b> a importância de <b>R$ {valor:,.2f}</b>.</p>
+        <div class="info-row"><b>Referente a:</b> {referente_a}</div>
+        <div class="info-row"><b>Forma de Pagamento:</b> {forma_pagamento}</div>
+        <div class="info-row"><b>Data:</b> {data.strftime('%d/%m/%Y')}</div>
+        
+        <br>
+        <div style="text-align: right;">
+            <p>__________________________________________<br>
+            <b>{nome_empresa}</b><br>
+            {telefone}<br>
+            {cpf_cnpj}</p>
+        </div>
+        <div class="footer-recibo">
+            Documento emitido com finalidade comprobatória.
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
     
-    st.info("Para imprimir: Pressione Ctrl+P (ou Cmd+P no Mac) e salve como PDF.")
+    # Exibe o HTML renderizado
+    st.markdown(html_content, unsafe_allow_html=True)
+    
+    # Botão para download do HTML
+    st.download_button(
+        label="Download como HTML",
+        data=html_content,
+        file_name="recibo.html",
+        mime="text/html"
+    )
+    
+    st.info("Dica: Use o botão de download ou imprima a tela (Ctrl+P).")
